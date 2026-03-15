@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sports Picks AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8303A;--red-dark:#B8222A;--red-glow:rgba(232,48,58,0.18);
+  --blue:#1D6FD6;--green:#27AE60;--amber:#D97706;--purple:#7C3AED;
+  --bg:#0C0C0F;--bg2:#141418;--bg3:#1C1C22;--bg4:#24242C;
+  --b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.13);
+  --t1:#EDEDF0;--t2:#9090A0;--t3:#55555F;
+  --fd:'Barlow Condensed',sans-serif;--fb:'Barlow',sans-serif;
+  --r:10px;--rl:14px;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--t1);font-family:var(--fb);font-size:15px;line-height:1.6}
+.page{max-width:660px;margin:0 auto;padding:2rem 1.25rem 5rem}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
+.logo-row{display:flex;align-items:center;gap:11px}
+.logo{width:40px;height:40px;background:var(--red);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:800;font-size:17px;color:#fff;box-shadow:0 0 22px var(--red-glow);flex-shrink:0}
+.logo-text h1{font-family:var(--fd);font-size:21px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1}
+.logo-text p{font-size:11px;color:var(--t3);letter-spacing:0.5px;text-transform:uppercase;margin-top:2px}
+.live-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:0.5px solid var(--b2);border-radius:20px;font-size:11px;color:var(--t2)}
+.ldot{width:6px;height:6px;background:#2ECC71;border-radius:50%;animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+
+/* API KEY BOX */
+.key-box{background:rgba(29,111,214,0.08);border:1px solid rgba(29,111,214,0.25);border-radius:var(--rl);padding:14px 16px;margin-bottom:1.75rem}
+.key-box-title{font-size:13px;font-weight:600;color:#60A5FA;margin-bottom:3px}
+.key-box-desc{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px}
+.key-box-desc a{color:#60A5FA;text-decoration:none}
+.key-box-desc a:hover{text-decoration:underline}
+.key-row{display:flex;gap:7px}
+.key-input{flex:1;padding:9px 12px;background:var(--bg3);border:1px solid rgba(29,111,214,0.3);border-radius:var(--r);font-size:13px;font-family:monospace;color:var(--t1)}
+.key-input:focus{outline:none;border-color:var(--blue)}
+.key-input::placeholder{color:var(--t3)}
+.btn-save{padding:9px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--fb);white-space:nowrap}
+.btn-save:hover{background:#1558B0}
+.key-ok{font-size:12px;color:#2ECC71;margin-top:6px;display:none}
+.key-steps{font-size:12px;color:var(--t2);margin-top:10px;line-height:1.8;border-top:1px solid rgba(29,111,214,0.15);padding-top:10px}
+.key-steps strong{color:var(--t1)}
+
+/* STEP */
+.step-block{margin-bottom:1.75rem}
+.slbl{font-family:var(--fd);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.slbl::before{content:attr(data-n);width:19px;height:19px;background:var(--bg4);border:0.5px solid var(--b2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--t2);flex-shrink:0}
+
+/* SPORT GRID */
+.sport-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sp-btn{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--rl);padding:13px 6px;cursor:pointer;text-align:center;transition:all 0.16s;font-family:var(--fb)}
+.sp-btn:hover{background:var(--bg4);border-color:var(--b2)}
+.sp-btn.on{background:rgba(232,48,58,0.1);border-color:var(--red);box-shadow:0 0 14px var(--red-glow)}
+.sp-icon{font-size:24px;display:block;margin-bottom:5px}
+.sp-name{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:0.5px}
+.sp-btn.on .sp-name{color:var(--red)}
+
+/* TABS: search vs manual */
+.mode-tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab-btn{padding:7px 14px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;font-family:var(--fb);transition:all 0.14s}
+.tab-btn:hover{background:var(--bg4);color:var(--t1)}
+.tab-btn.on{background:rgba(232,48,58,0.1);border-color:var(--red);color:var(--red)}
+
+/* SEARCH */
+.search-row{display:flex;gap:7px}
+.s-input{flex:1;padding:11px 14px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);font-size:14px;font-family:var(--fb);color:var(--t1);transition:border-color 0.15s}
+.s-input:focus{outline:none;border-color:var(--red)}
+.s-input::placeholder{color:var(--t3)}
+.btn-search{padding:11px 20px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all 0.15s;white-space:nowrap}
+.btn-search:hover{background:var(--red-dark)}
+.btn-search:disabled{opacity:0.4;cursor:not-allowed}
+
+/* MANUAL ENTRY */
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m-field{display:flex;flex-direction:column;gap:4px}
+.m-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px}
+.m-input{padding:10px 12px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);font-size:14px;font-family:var(--fb);color:var(--t1)}
+.m-input:focus{outline:none;border-color:var(--b2)}
+.m-input::placeholder{color:var(--t3)}
+.m-full{grid-column:1/-1}
+.btn-manual{width:100%;margin-top:10px;padding:11px;background:var(--bg4);color:var(--t1);border:1px solid var(--b2);border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all 0.14s}
+.btn-manual:hover{background:rgba(232,48,58,0.1);border-color:var(--red);color:var(--red)}
+
+/* GAMES LIST */
+.games-list{display:flex;flex-direction:column;gap:6px}
+.g-card{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);padding:12px 15px;cursor:pointer;transition:all 0.14s;display:flex;justify-content:space-between;align-items:center}
+.g-card:hover{background:var(--bg4);border-color:var(--b2)}
+.g-card.on{background:rgba(29,111,214,0.1);border-color:var(--blue);box-shadow:0 0 14px rgba(29,111,214,0.12)}
+.g-teams{font-size:14px;font-weight:600;color:var(--t1)}
+.g-meta{font-size:12px;color:var(--t3);margin-top:2px}
+.g-time{font-size:11px;padding:3px 9px;border-radius:20px;background:var(--bg4);color:var(--t2);border:0.5px solid var(--b2);font-weight:500;white-space:nowrap}
+
+/* PICK TYPES */
+.pt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:13px}
+.pt-btn{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--fb);color:var(--t2);text-align:left;transition:all 0.14s;display:flex;align-items:center;gap:8px}
+.pt-btn:hover{background:var(--bg4);color:var(--t1)}
+.pt-btn.on{border-color:var(--b2);color:var(--t1)}
+.pt-btn.on .ptd{opacity:1}
+.ptd{width:7px;height:7px;border-radius:50%;opacity:0.2;flex-shrink:0;transition:opacity 0.14s}
+.ptd.r{background:var(--red)}.ptd.o{background:var(--green)}.ptd.h{background:var(--blue)}.ptd.p{background:var(--purple)}
+
+/* CONTEXT */
+.ctx-input{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);font-size:13px;font-family:var(--fb);color:var(--t1);resize:vertical;min-height:68px;line-height:1.5}
+.ctx-input:focus{outline:none;border-color:var(--b2)}
+.ctx-input::placeholder{color:var(--t3)}
+.ctx-hint{font-size:11px;color:var(--t3);margin-top:5px}
+
+.btn-gen{width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--fd);letter-spacing:1.5px;text-transform:uppercase;transition:all 0.16s;box-shadow:0 4px 20px var(--red-glow)}
+.btn-gen:hover{background:var(--red-dark);transform:translateY(-1px)}
+.btn-gen:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+
+/* ERROR */
+.err{background:rgba(232,48,58,0.1);border:1px solid rgba(232,48,58,0.28);border-radius:var(--r);padding:10px 14px;font-size:13px;color:#F87171;margin-top:8px;display:none;line-height:1.5}
+
+/* LOADING */
+.load-screen{display:none;text-align:center;padding:3.5rem 0}
+.rings{position:relative;width:58px;height:58px;margin:0 auto 1.5rem}
+.ring1{position:absolute;inset:0;border-radius:50%;border:2px solid var(--b1);border-top-color:var(--red);animation:spin 0.95s linear infinite}
+.ring2{position:absolute;inset:9px;border-radius:50%;border:1.5px solid var(--b1);border-bottom-color:var(--blue);animation:spin 1.35s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-family:var(--fd);font-size:19px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.load-msg{font-size:13px;color:var(--t2);min-height:20px}
+.load-dots{display:flex;gap:5px;justify-content:center;margin-top:1.25rem}
+.ld{width:6px;height:6px;border-radius:50%;background:var(--bg4);transition:background 0.3s}
+.ld.done{background:var(--red);opacity:0.5}.ld.cur{background:var(--red);animation:blink 1s ease-in-out infinite}
+
+/* RESULTS */
+.res-screen{display:none}
+.res-nav{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem}
+.match-title{font-family:var(--fd);font-size:25px;font-weight:800;text-transform:uppercase;letter-spacing:0.4px;line-height:1.1}
+.match-sub{font-size:12px;color:var(--t3);margin-top:4px;line-height:1.5}
+.btn-back{padding:8px 14px;background:transparent;color:var(--t2);border:1px solid var(--b1);border-radius:var(--r);font-size:13px;font-family:var(--fb);cursor:pointer;transition:all 0.14s;white-space:nowrap;margin-left:12px;flex-shrink:0}
+.btn-back:hover{background:var(--bg3);color:var(--t1)}
+
+.kstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.5rem}
+.kst{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);padding:12px;text-align:center}
+.kst-val{font-family:var(--fd);font-size:21px;font-weight:700;line-height:1}
+.kst-lbl{font-size:11px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+.picks-grid{display:flex;flex-direction:column;gap:10px}
+.pick{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--rl);padding:16px;animation:up 0.4s ease both;opacity:0}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pick:nth-child(1){animation-delay:.05s}.pick:nth-child(2){animation-delay:.12s}
+.pick:nth-child(3){animation-delay:.19s}.pick:nth-child(4){animation-delay:.26s}
+.pick:nth-child(5){animation-delay:.33s}
+
+.pick-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pick-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:20px}
+.tR{background:rgba(232,48,58,0.15);color:#F87171}
+.tO{background:rgba(39,174,96,0.15);color:#4ADE80}
+.tH{background:rgba(29,111,214,0.15);color:#60A5FA}
+.tP{background:rgba(124,58,237,0.15);color:#A78BFA}
+.pick-odds{font-size:13px;font-weight:700;font-family:var(--fd);color:var(--amber);letter-spacing:0.5px}
+.pick-main{font-family:var(--fd);font-size:23px;font-weight:800;color:var(--t1);text-transform:uppercase;letter-spacing:0.3px;line-height:1.1;margin-bottom:11px}
+.conf-row{display:flex;justify-content:space-between;margin-bottom:5px}
+.conf-lbl{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px}
+.conf-pct{font-size:13px;font-weight:700;font-family:var(--fd)}
+.cH{color:#2ECC71}.cM{color:#F59E0B}.cL{color:var(--red)}
+.conf-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-bottom:11px}
+.cf{height:100%;border-radius:2px}
+.fH{background:linear-gradient(90deg,#1A9E4A,#2ECC71)}
+.fM{background:linear-gradient(90deg,#B45309,#F59E0B)}
+.fL{background:linear-gradient(90deg,var(--red-dark),var(--red))}
+.pick-reason{font-size:13px;color:var(--t2);line-height:1.65;padding-top:11px;border-top:1px solid var(--b1)}
+
+.sources{margin-top:1.5rem;padding:12px 14px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r)}
+.sources-title{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.source-item{font-size:12px;color:var(--t2);margin-bottom:4px;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.sdot{width:4px;height:4px;background:var(--t3);border-radius:50%;margin-top:6px;flex-shrink:0}
+
+.disc{font-size:11px;color:var(--t3);text-align:center;line-height:1.6;padding-top:1.25rem;border-top:1px solid var(--b1);margin-top:1.5rem}
+.disc strong{color:var(--t2)}
+
+@media(max-width:480px){
+  .sport-grid{grid-template-columns:repeat(2,1fr)}
+  .pt-grid{grid-template-columns:1fr}
+  .manual-grid{grid-template-columns:1fr}
+  .match-title{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="logo-row">
+      <div class="logo">SP</div>
+      <div class="logo-text">
+        <h1>Sports Picks AI</h1>
+        <p>Gemini · 100% gratis</p>
+      </div>
+    </div>
+    <div class="live-pill"><span class="ldot"></span>Web search</div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="key-box" id="key-box">
+    <div class="key-box-title">🔑 API Key de Gemini — completamente gratuita</div>
+    <div class="key-box-desc">
+      Obtén tu clave en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a> — solo cuenta de Google, sin tarjeta.
+    </div>
+    <div class="key-row">
+      <input class="key-input" type="password" id="key-inp" placeholder="AIzaSy..."/>
+      <button class="btn-save" onclick="saveKey()">Guardar</button>
+    </div>
+    <div class="key-ok" id="key-ok">✓ Clave guardada</div>
+    <div class="key-steps">
+      <strong>Cómo obtenerla:</strong><br>
+      1. Entra a <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#60A5FA">aistudio.google.com/app/apikey</a><br>
+      2. Inicia sesión con Google<br>
+      3. Clic en <strong>"Create API key"</strong> → copia y pega arriba
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="setup">
+
+    <!-- STEP 1: SPORT -->
+    <div class="step-block">
+      <div class="slbl" data-n="1">Elige el deporte</div>
+      <div class="sport-grid">
+        <button class="sp-btn on" data-sport="fútbol" onclick="pickSport(this)"><span class="sp-icon">⚽</span><span class="sp-name">Fútbol</span></button>
+        <button class="sp-btn" data-sport="NBA" onclick="pickSport(this)"><span class="sp-icon">🏀</span><span class="sp-name">NBA</span></button>
+        <button class="sp-btn" data-sport="MLB" onclick="pickSport(this)"><span class="sp-icon">⚾</span><span class="sp-name">MLB</span></button>
+        <button class="sp-btn" data-sport="NFL" onclick="pickSport(this)"><span class="sp-icon">🏈</span><span class="sp-name">NFL</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 2: PARTIDO -->
+    <div class="step-block">
+      <div class="slbl" data-n="2">Ingresa el partido</div>
+      <div class="mode-tabs">
+        <button class="tab-btn on" id="tab-search" onclick="setMode('search')">🔍 Buscar automático</button>
+        <button class="tab-btn" id="tab-manual" onclick="setMode('manual')">✏️ Ingresar manual</button>
+      </div>
+
+      <!-- SEARCH MODE -->
+      <div id="mode-search">
+        <div class="search-row">
+          <input class="s-input" id="s-inp" placeholder="Ej: Real Madrid vs Barcelona, Lakers vs Celtics..."/>
+          <button class="btn-search" id="s-btn" onclick="searchGame()">Buscar</button>
+        </div>
+        <div class="err" id="s-err"></div>
+        <div id="games-list-wrap" style="display:none;margin-top:10px">
+          <div class="games-list" id="games-list"></div>
+        </div>
+      </div>
+
+      <!-- MANUAL MODE -->
+      <div id="mode-manual" style="display:none">
+        <div class="manual-grid">
+          <div class="m-field">
+            <span class="m-label">Equipo local</span>
+            <input class="m-input" id="m-home" placeholder="Ej: Real Madrid"/>
+          </div>
+          <div class="m-field">
+            <span class="m-label">Equipo visitante</span>
+            <input class="m-input" id="m-away" placeholder="Ej: Barcelona"/>
+          </div>
+          <div class="m-field">
+            <span class="m-label">Liga / Competición</span>
+            <input class="m-input" id="m-league" placeholder="Ej: La Liga, Champions League"/>
+          </div>
+          <div class="m-field">
+            <span class="m-label">Fecha</span>
+            <input class="m-input" id="m-date" type="date"/>
+          </div>
+        </div>
+        <button class="btn-manual" onclick="confirmManual()">Confirmar partido →</button>
+        <div class="err" id="m-err"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: CONTEXT + PICKS (shown after game selected) -->
+    <div id="game-confirmed" style="display:none">
+
+      <div class="step-block">
+        <div class="slbl" data-n="3">Contexto adicional <span style="font-weight:400;font-size:10px;letter-spacing:0;color:var(--t3)">(opcional)</span></div>
+        <textarea class="ctx-input" id="ctx-inp" placeholder="Ej: Messi está lesionado, el local lleva 3 derrotas, lluvia prevista, partido de ida en Champions..."></textarea>
+        <div class="ctx-hint">Agrega info reciente para mejorar la precisión de los picks.</div>
+      </div>
+
+      <div class="step-block">
+        <div class="slbl" data-n="4">Tipos de picks</div>
+        <div class="pt-grid">
+          <button class="pt-btn on" data-t="resultado" onclick="togglePT(this)"><span class="ptd r"></span>Resultado (1X2 / Moneyline)</button>
+          <button class="pt-btn on" data-t="overunder" onclick="togglePT(this)"><span class="ptd o"></span>Over / Under</button>
+          <button class="pt-btn on" data-t="handicap" onclick="togglePT(this)"><span class="ptd h"></span>Hándicap / Spread</button>
+          <button class="pt-btn on" data-t="props" onclick="togglePT(this)"><span class="ptd p"></span>Props de jugadores</button>
+        </div>
+        <button class="btn-gen" id="gen-btn" onclick="generate()">Generar picks con IA</button>
+      </div>
+
+    </div>
+
+  </div><!-- /setup -->
+
+  <!-- LOADING -->
+  <div class="load-screen" id="load-screen">
+    <div class="rings"><div class="ring1"></div><div class="ring2"></div></div>
+    <div class="load-title">Analizando partido</div>
+    <div class="load-msg" id="load-msg">Iniciando búsqueda web...</div>
+    <div class="load-dots">
+      <div class="ld cur" id="ld0"></div>
+      <div class="ld" id="ld1"></div>
+      <div class="ld" id="ld2"></div>
+      <div class="ld" id="ld3"></div>
+      <div class="ld" id="ld4"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="res-screen" id="res-screen">
+    <div class="res-nav">
+      <div>
+        <div class="match-title" id="r-title"></div>
+        <div class="match-sub" id="r-sub"></div>
+      </div>
+      <button class="btn-back" onclick="reset()">← Nuevo</button>
+    </div>
+    <div class="kstats" id="r-kstats"></div>
+    <div class="picks-grid" id="r-picks"></div>
+    <div class="sources" id="r-sources" style="display:none">
+      <div class="sources-title">Fuentes consultadas</div>
+      <div id="r-sources-list"></div>
+    </div>
+    <div class="disc"><strong>Solo para entretenimiento.</strong> Los picks son análisis automatizados y no garantizan resultados. Apostar conlleva riesgo económico. Juega con responsabilidad.</div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+let sport='fútbol', game=null, apiKey=localStorage.getItem('sp_g_key')||'';
+let activeTypes=new Set(['resultado','overunder','handicap','props']);
+let inputMode='search';
+const MODEL='gemini-2.0-flash';
+
+if(apiKey) document.getElementById('key-box').style.display='none';
+
+function saveKey(){
+  const k=document.getElementById('key-inp').value.trim();
+  if(!k.startsWith('AIza')){alert('Clave inválida. Debe comenzar con AIza...');return;}
+  apiKey=k; localStorage.setItem('sp_g_key',k);
+  document.getElementById('key-ok').style.display='block';
+  setTimeout(()=>document.getElementById('key-box').style.display='none',1200);
+}
+
+function pickSport(btn){
+  document.querySelectorAll('.sp-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); sport=btn.dataset.sport;
+  clearGameSelection();
+}
+
+function setMode(m){
+  inputMode=m;
+  document.getElementById('tab-search').classList.toggle('on', m==='search');
+  document.getElementById('tab-manual').classList.toggle('on', m==='manual');
+  document.getElementById('mode-search').style.display=m==='search'?'block':'none';
+  document.getElementById('mode-manual').style.display=m==='manual'?'block':'none';
+  clearGameSelection();
+}
+
+function clearGameSelection(){
+  game=null;
+  document.getElementById('game-confirmed').style.display='none';
+  document.getElementById('games-list-wrap').style.display='none';
+  document.getElementById('s-err').style.display='none';
+  document.getElementById('m-err').style.display='none';
+}
+
+function togglePT(btn){
+  const t=btn.dataset.t;
+  if(activeTypes.has(t)){if(activeTypes.size>1){activeTypes.delete(t);btn.classList.remove('on');}}
+  else{activeTypes.add(t);btn.classList.add('on');}
+}
+
+/* ── GEMINI API CALL ── */
+async function gemini(prompt, useSearch=false){
+  const body={
+    contents:[{role:'user',parts:[{text:prompt}]}],
+    generationConfig:{temperature:0.3,maxOutputTokens:2048}
+  };
+  if(useSearch) body.tools=[{google_search:{}}];
+  const res=await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}
+  );
+  const data=await res.json();
+  if(data.error) throw new Error(data.error.message);
+  const text=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  const sources=(data.candidates?.[0]?.groundingMetadata?.groundingChunks||[]).map(c=>c.web).filter(Boolean);
+  return {text,sources};
+}
+
+/* ── EXTRACT JSON robustly ── */
+function extractJSON(raw){
+  // Remove markdown fences
+  let s=raw.replace(/```json|```/gi,'').trim();
+  // Find outermost { }
+  const start=s.indexOf('{'), end=s.lastIndexOf('}');
+  if(start===-1||end===-1) throw new Error('El modelo no devolvió JSON válido');
+  return JSON.parse(s.slice(start,end+1));
+}
+
+/* ── SEARCH GAME ── */
+async function searchGame(){
+  if(!apiKey){alert('Primero guarda tu API key de Gemini.');return;}
+  const q=document.getElementById('s-inp').value.trim();
+  if(!q) return;
+  const errEl=document.getElementById('s-err'); errEl.style.display='none';
+  const btn=document.getElementById('s-btn'); btn.disabled=true; btn.textContent='Buscando...';
+  document.getElementById('games-list-wrap').style.display='none';
+  clearGameSelection();
+
+  const today=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const prompt=`Busca en internet partidos de ${sport} con equipos: "${q}". Fecha actual: ${today}. Solo partidos de los próximos 7 días o de hoy.
+
+Tu respuesta debe ser ÚNICAMENTE este JSON, sin ningún otro texto, sin markdown, sin explicaciones:
+{"games":[{"id":"1","homeTeam":"nombre","awayTeam":"nombre","league":"liga","date":"DD/MM/YYYY","time":"HH:MM","venue":"ciudad"}]}
+
+Si no encuentras nada devuelve exactamente: {"games":[]}
+Máximo 5 partidos.`;
+
+  try{
+    const {text}=await gemini(prompt,true);
+    console.log('Search response:',text);
+    const parsed=extractJSON(text);
+    if(!parsed.games||!parsed.games.length){
+      errEl.innerHTML='No se encontraron partidos automáticamente.<br><strong style="color:var(--t1)">Tip:</strong> Usa el modo <strong style="color:var(--red)">"Ingresar manual"</strong> para escribir el partido directamente.';
+      errEl.style.display='block';
+    } else {
+      renderGames(parsed.games);
+    }
+  }catch(e){
+    console.error(e);
+    errEl.innerHTML='Error al buscar: '+e.message+'<br><strong style="color:var(--t1)">Prueba el modo</strong> <strong style="color:var(--red)">"Ingresar manual"</strong>.';
+    errEl.style.display='block';
+  }
+  btn.disabled=false; btn.textContent='Buscar';
+}
+
+function renderGames(games){
+  const list=document.getElementById('games-list'); list.innerHTML='';
+  games.forEach(g=>{
+    const d=document.createElement('div'); d.className='g-card';
+    d.innerHTML=`<div><div class="g-teams">${g.awayTeam} <span style="color:var(--t3);font-size:12px;font-weight:400">vs</span> ${g.homeTeam}</div><div class="g-meta">${g.league} · ${g.date}${g.venue?' · '+g.venue:''}</div></div><div class="g-time">${g.time||'Por def.'}</div>`;
+    d.onclick=()=>{
+      document.querySelectorAll('.g-card').forEach(c=>c.classList.remove('on'));
+      d.classList.add('on'); game=g;
+      showGameConfirmed();
+    };
+    list.appendChild(d);
+  });
+  document.getElementById('games-list-wrap').style.display='block';
+}
+
+function confirmManual(){
+  const home=document.getElementById('m-home').value.trim();
+  const away=document.getElementById('m-away').value.trim();
+  const league=document.getElementById('m-league').value.trim();
+  const dateVal=document.getElementById('m-date').value;
+  const errEl=document.getElementById('m-err');
+  if(!home||!away){errEl.textContent='Ingresa ambos equipos.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  let dateStr='';
+  if(dateVal){
+    const d=new Date(dateVal+'T12:00:00');
+    dateStr=d.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+  game={homeTeam:home,awayTeam:away,league:league||sport,date:dateStr||'Próximamente',time:'',venue:''};
+  showGameConfirmed();
+}
+
+function showGameConfirmed(){
+  document.getElementById('game-confirmed').style.display='block';
+  document.getElementById('game-confirmed').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ── GENERATE PICKS ── */
+const msgs=['Buscando estadísticas recientes...','Analizando historial entre equipos...','Revisando lesiones y bajas...','Evaluando forma y contexto de temporada...','Calculando confianza y generando picks...'];
+
+async function generate(){
+  if(!game){alert('Selecciona o ingresa un partido primero.');return;}
+  if(!apiKey){alert('Primero guarda tu API key.');return;}
+  const types=[...activeTypes];
+  const ctx=document.getElementById('ctx-inp').value.trim();
+
+  document.getElementById('setup').style.display='none';
+  const ls=document.getElementById('load-screen'); ls.style.display='block';
+  let mi=0;
+  document.getElementById('load-msg').textContent=msgs[0];
+  for(let i=0;i<5;i++) document.getElementById('ld'+i).className='ld';
+  document.getElementById('ld0').className='ld cur';
+  const iv=setInterval(()=>{
+    document.getElementById('ld'+mi).className='ld done';
+    mi=Math.min(mi+1,4);
+    document.getElementById('ld'+mi).className='ld cur';
+    document.getElementById('load-msg').textContent=msgs[mi];
+  },2200);
+
+  const typeMap={resultado:'Resultado final (1X2/Moneyline)',overunder:'Over/Under de puntos o goles',handicap:'Hándicap/Spread',props:'Props de jugadores individuales'};
+  const typesStr=types.map(t=>typeMap[t]).join(', ');
+  const today=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const prompt=`Eres un analista experto en apuestas deportivas. Usa Google Search para obtener datos actuales y genera picks para este partido.
+
+PARTIDO: ${game.awayTeam} vs ${game.homeTeam}
+LIGA: ${game.league}
+FECHA: ${game.date}${game.time?' a las '+game.time:''}
+DEPORTE: ${sport}
+FECHA ACTUAL: ${today}
+TIPOS DE PICKS REQUERIDOS: ${typesStr}
+${ctx?'INFORMACIÓN ADICIONAL: '+ctx:''}
+
+Busca:
+- Últimos 5 partidos de cada equipo con resultados y stats
+- Historial head-to-head entre estos dos equipos
+- Lesiones y bajas confirmadas para este partido
+- Posición en tabla y racha de forma reciente
+- Stats clave de jugadores para los props solicitados
+- Noticias o contexto importante previo al partido
+
+Responde ÚNICAMENTE con este JSON, sin markdown, sin texto adicional:
+{
+  "matchInfo": {
+    "title": "Equipo A vs Equipo B",
+    "league": "Liga",
+    "date": "Fecha",
+    "context": "Una frase de contexto clave del partido"
+  },
+  "keyStats": [
+    {"label": "Descripción corta", "value": "dato concreto"},
+    {"label": "Descripción corta", "value": "dato concreto"},
+    {"label": "Descripción corta", "value": "dato concreto"}
+  ],
+  "picks": [
+    {
+      "type": "resultado",
+      "pick": "Apuesta específica",
+      "odds": "1.85",
+      "confidence": 72,
+      "reasoning": "2-3 oraciones con estadísticas concretas que justifican esta apuesta"
+    }
+  ]
+}
+
+Genera al menos 1 pick por cada tipo en: ${typesStr}. Confianza de 0-100. Para props incluye nombre del jugador y línea específica. Sé honesto y conservador.`;
+
+  try{
+    const {text,sources}=await gemini(prompt,true);
+    console.log('Picks response:',text);
+    const parsed=extractJSON(text);
+    clearInterval(iv); ls.style.display='none';
+    renderResults(parsed,sources);
+  }catch(e){
+    console.error(e);
+    clearInterval(iv); ls.style.display='none';
+    document.getElementById('setup').style.display='block';
+    const errEl=document.getElementById('s-err');
+    errEl.textContent='Error al generar picks: '+e.message;
+    errEl.style.display='block';
+  }
+}
+
+/* ── RENDER RESULTS ── */
+function renderResults(data, sources){
+  document.getElementById('r-title').textContent=data.matchInfo?.title||(game.awayTeam+' vs '+game.homeTeam);
+  const sub=[(data.matchInfo?.league||game.league),(data.matchInfo?.date||game.date),data.matchInfo?.context].filter(Boolean).join(' · ');
+  document.getElementById('r-sub').textContent=sub;
+
+  const sg=document.getElementById('r-kstats'); sg.innerHTML='';
+  (data.keyStats||[]).slice(0,3).forEach(s=>{
+    const d=document.createElement('div'); d.className='kst';
+    d.innerHTML=`<div class="kst-val">${s.value}</div><div class="kst-lbl">${s.label}</div>`;
+    sg.appendChild(d);
+  });
+
+  const tagMap={resultado:'tR',overunder:'tO',handicap:'tH',props:'tP'};
+  const nameMap={resultado:'Resultado',overunder:'Over/Under',handicap:'Hándicap',props:'Prop'};
+  const pg=document.getElementById('r-picks'); pg.innerHTML='';
+  (data.picks||[]).forEach(p=>{
+    const conf=Math.max(0,Math.min(100,parseInt(p.confidence)||60));
+    const cc=conf>=68?'cH':conf>=52?'cM':'cL';
+    const fc=conf>=68?'fH':conf>=52?'fM':'fL';
+    const d=document.createElement('div'); d.className='pick';
+    d.innerHTML=`
+      <div class="pick-hdr">
+        <span class="pick-tag ${tagMap[p.type]||'tR'}">${nameMap[p.type]||p.type}</span>
+        ${p.odds?`<span class="pick-odds">Cuota ~${p.odds}</span>`:''}
+      </div>
+      <div class="pick-main">${p.pick}</div>
+      <div class="conf-row"><span class="conf-lbl">Confianza</span><span class="conf-pct ${cc}">${conf}%</span></div>
+      <div class="conf-bar"><div class="cf ${fc}" style="width:${conf}%"></div></div>
+      <div class="pick-reason">${p.reasoning}</div>`;
+    pg.appendChild(d);
+  });
+
+  const validSrc=(sources||[]).filter(s=>s&&s.uri).slice(0,5);
+  if(validSrc.length){
+    const sl=document.getElementById('r-sources-list'); sl.innerHTML='';
+    validSrc.forEach(s=>{
+      const d=document.createElement('div'); d.className='source-item';
+      d.innerHTML=`<span class="sdot"></span><span>${s.title||s.uri.replace(/https?:\/\//,'').split('/')[0]}</span>`;
+      sl.appendChild(d);
+    });
+    document.getElementById('r-sources').style.display='block';
+  }
+
+  document.getElementById('res-screen').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── RESET ── */
+function reset(){
+  document.getElementById('res-screen').style.display='none';
+  document.getElementById('r-sources').style.display='none';
+  document.getElementById('setup').style.display='block';
+  clearGameSelection();
+  document.getElementById('s-inp').value='';
+  document.getElementById('ctx-inp').value='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('s-inp').addEventListener('keydown',e=>{if(e.key==='Enter')searchGame();});
+
+// Set today's date as default in date picker
+const today=new Date(); today.setDate(today.getDate());
+document.getElementById('m-date').value=today.toISOString().split('T')[0];
+</script>
+</body>
+</html>
